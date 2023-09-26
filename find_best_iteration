@@ -1,0 +1,39 @@
+# Generate a LGBM Dataset
+# Train a LightGBM classifier
+dtrain = lgb.Dataset(
+        data=X_train,
+        label=y_train
+)
+
+# Test a LightGBM classifier
+dtest = lgb.Dataset(
+        data=X_test,
+        label=y_test
+)
+
+# Define the best hiperparámetros previously
+parameters = {
+    'boosting_type': 'dart',
+    'objective': 'binary',
+    'learning_rate': 0.05,
+    'max_depth' : 4,
+    'colsample_bytree' : 0.73070669538529124,
+    'min_child_samples': 15,
+    'num_leaves':18,
+    'subsample':0.872812621678554,
+    'predict_disable_shape_check': True
+}
+
+# Assuming model is a Booster object
+eval_results = {}
+lgb.train(
+    parameters,
+    dtrain,
+    num_boost_round=200,
+    valid_sets=[dtrain, dtest],
+    valid_names=['train', 'test'],
+    callbacks=[lgb.record_evaluation(eval_results)]
+)
+
+# Now, you can use eval_results with lgb.plot_metric
+lgb.plot_metric(eval_results)
