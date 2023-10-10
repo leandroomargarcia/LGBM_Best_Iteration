@@ -1,0 +1,47 @@
+from sklearn.metrics import auc
+
+def plot_roc_curve_with_threshold_and_auc(X_train, y_train, X_test, y_test, threshold=0.5):
+    """
+    Entrena un modelo de regresión logística, predice las probabilidades y grafica la curva ROC con un punto
+    que indica el umbral especificado y muestra el AUC en el gráfico.
+    
+    Parámetros:
+    - X_train, y_train: Conjunto de entrenamiento.
+    - X_test, y_test: Conjunto de prueba.
+    - threshold: Umbral para marcar en la curva ROC.
+    
+    Devuelve:
+    - Gráfico de la curva ROC con el umbral y AUC especificados.
+    """
+    
+    # Entrenar un modelo de regresión logística
+    clf = LogisticRegression(random_state=42)
+    clf.fit(X_train, y_train)
+
+    # Predecir las probabilidades de la clase positiva
+    y_pred_prob = clf.predict_proba(X_test)[:, 1]
+
+    # Calcular la curva ROC
+    fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob)
+
+    # Encontrar el índice del umbral especificado
+    idx = np.argmin(np.abs(thresholds - threshold))
+    
+    # Calcular el AUC
+    roc_auc = auc(fpr, tpr)
+
+    # Graficar la curva ROC
+    plt.figure(figsize=(10, 8))
+    plt.plot(fpr, tpr, label=f'ROC curve (AUC = {roc_auc:.2f})')
+    plt.scatter(fpr[idx], tpr[idx], color='red', label=f'Threshold = {threshold}')  # marcar el umbral
+    plt.plot([0, 1], [0, 1], 'k--')  # línea diagonal
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver Operating Characteristic (ROC) Curve')
+    plt.legend(loc="lower right")
+    plt.show()
+
+# Prueba de la función con AUC
+plot_roc_curve_with_threshold_and_auc(X_train_dropped, y_train75, X_test_dropped, y_test25, threshold=0.5)
