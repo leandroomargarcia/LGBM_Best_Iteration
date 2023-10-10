@@ -1,8 +1,8 @@
 from sklearn.metrics import auc
 
-def plot_roc_curve_with_threshold_and_auc(X_train, y_train, X_test, y_test, threshold=0.5):
+def plot_roc_curve_with_threshold_and_auc(Modelo, X_train, y_train, X_test, y_test, threshold=0.5):
     """
-    Entrena un modelo de regresión logística, predice las probabilidades y grafica la curva ROC con un punto
+    Pasandole el modelo LGBM entrenado grafica la curva ROC con un punto
     que indica el umbral especificado y muestra el AUC en el gráfico.
     
     Parámetros:
@@ -14,12 +14,10 @@ def plot_roc_curve_with_threshold_and_auc(X_train, y_train, X_test, y_test, thre
     - Gráfico de la curva ROC con el umbral y AUC especificados.
     """
     
-    # Entrenar un modelo de regresión logística
-    clf = LogisticRegression(random_state=42)
-    clf.fit(X_train, y_train)
+
 
     # Predecir las probabilidades de la clase positiva
-    y_pred_prob = clf.predict_proba(X_test)[:, 1]
+    y_pred_prob = Modelo.predict(X_test)
 
     # Calcular la curva ROC
     fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob)
@@ -44,4 +42,4 @@ def plot_roc_curve_with_threshold_and_auc(X_train, y_train, X_test, y_test, thre
     plt.show()
 
 # Prueba de la función con AUC
-plot_roc_curve_with_threshold_and_auc(X_train_dropped, y_train75, X_test_dropped, y_test25, threshold=0.5)
+plot_roc_curve_with_threshold_and_auc(model_dropped, X_train_dropped, y_train75, X_test_dropped, y_test25, threshold=0.5)
