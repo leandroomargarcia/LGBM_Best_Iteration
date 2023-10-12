@@ -1,0 +1,88 @@
+import lightgbm as lgb
+import pandas as pd
+from sklearn.metrics import roc_auc_score
+import numpy as np
+import random
+
+# Inicializar una lista para almacenar los resultados
+results_list = []
+
+# Definir el DataFrame para almacenar los resultados
+results_df = pd.DataFrame(columns=['Feature Dropped', 'AUC Score (X_OOB)', 'AUC Score (X_test25)'])
+
+# Entrenar el modelo inicial
+dtrain7525 = lgb.Dataset(
+    data=X_train75,
+    label=y_train75,
+    weight=np.where(y_train75.isin([0]), 1.1, 1.0),
+    free_raw_data=False
+)
+
+parameters = {
+    'boosting_type': 'gbdt',
+    'objective': 'binary',
+    'learning_rate': 0.05,
+    'predict_disable_shape_check': True
+}
+
+model7525 = lgb.train(
+    params=parameters,
+    train_set=dtrain7525
+)
+
+# Calcular el AUC inicial en el conjunto X_OOB
+y_pred_initial_OOB = model7525.predict(X_OOB)
+initial_auc_OOB = roc_auc_score(y_OOB, y_pred_initial_OOB)
+
+# Calcular el AUC inicial en el conjunto X_test25
+y_pred_initial_test25 = model7525.predict(X_test25)
+initial_auc_test25 = roc_auc_score(y_test25, y_pred_initial_test25)
+
+results_list.append({'Feature Dropped': 'None', 'AUC Score (X_OOB)': initial_auc_OOB, 'AUC Score (X_test25)': initial_auc_test25})
+
+# Loop para eliminar 10 variables aleatorias a la vez y registrar el AUC
+for _ in range(1000):
+    # Seleccionar 10 variables aleatorias para eliminar
+    features_to_drop = random.sample(X_train75.columns.tolist(), 6)
+    
+    # Crear una copia del DataFrame sin las variables seleccionadas
+    X_train_dropped = X_train75.drop(columns=features_to_drop)
+    X_test_dropped = X_test25.drop(columns=features_to_drop)
+    
+    # Entrenar el modelo sin las variables seleccionadas
+    dtrain_dropped = lgb.Dataset(
+        data=X_train_dropped,
+        label=y_train75,
+        weight=np.where(y_train75.isin([0]), 1.1, 1.0),
+        free_raw_data=False
+    )
+    
+    model_dropped = lgb.train(
+        params=parameters,
+        train_set=dtrain_dropped
+    )
+    
+    # Calcular el AUC en el conjunto X_OOB sin las variables seleccionadas
+    y_pred_dropped_OOB = model_dropped.predict(X_OOB[X_train_dropped.columns])
+    auc_dropped_OOB = roc_auc_score(y_OOB, y_pred_dropped_OOB)
+    
+    # Calcular el AUC en el conjunto X_test25 sin las variables seleccionadas
+    y_pred_dropped_test25 = model_dropped.predict(X_test_dropped)
+    auc_dropped_test25 = roc_auc_score(y_test25, y_pred_dropped_test25)
+    
+    # Registrar los resultados en la lista
+    results_list.append({'Feature Dropped': ', '.join(features_to_drop), 'AUC Score (X_OOB)': auc_dropped_OOB, 'AUC Score (X_test25)': auc_dropped_test25})
+
+# Convertir la lista de resultados en un DataFrame
+results_df = pd.DataFrame(results_list)
+
+# Encontrar la combinación de variables que resulta en el puntaje más alto de AUC en X_OOB
+best_feature_combination_OOB = results_df.loc[results_df['AUC Score (X_OOB)'].idxmax()]['Feature Dropped']
+
+# Encontrar la combinación de variables que resulta en el puntaje más alto de AUC en X_test25
+best_feature_combination_test25 = results_df.loc[results_df['AUC Score (X_test25)'].idxmax()]['Feature Dropped']
+
+print("Resultados:")
+print(results_df)
+print(f"La combinación de variables que resulta en el puntaje más alto de AUC en X_OOB es: {best_feature_combination_OOB}")
+print(f"La combinación de variables que resulta en el puntaje más alto de AUC en X_test25 es: {best_feature_combination_test25}")
