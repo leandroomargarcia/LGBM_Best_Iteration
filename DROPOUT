@@ -75,9 +75,7 @@ def dropout_lgbm(cant_features_eliminar, X_train, y_train, X_test, y_test, X_OOB
     return results_df
 
 def plot_results(results_df, limite_superior_AUC):
-    condition = (results_df['AUC Score (X_OOB)'] > limite_superior_AUC) & (results_df['AUC Score (X_test)'] > limite_superior_AUC) & \
-        (results_df['Feature Dropped'].str.contains('model_price')) & \
-        (results_df['Feature Dropped'].str.contains('model_price_new_1'))
+    condition = (results_df['AUC Score (X_OOB)'] > limite_superior_AUC) & (results_df['AUC Score (X_test)'] > limite_superior_AUC) 
 
     filtered_combinations = results_df[condition]
 
@@ -91,5 +89,5 @@ def plot_results(results_df, limite_superior_AUC):
 
 # Imagino que en algún punto tienes la definición de tus variables X_train, y_train, etc. 
 results_df = dropout_lgbm(10, X_train, y_train, X_test, y_test, X_OOB, y_OOB)
-plot_results(results_df, limite_superior_AUC=0.6)
+plot_results(results_df, limite_superior_AUC=0.7)
 
